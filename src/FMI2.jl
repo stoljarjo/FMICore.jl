@@ -580,7 +580,9 @@ function fmi2StringToInitial(s::AbstractString)
 end
 
 function fmi2DependencyKindToString(c::fmi2DependencyKind)
-    if c == fmi2DependencyKindDependent
+    if c == fmi2DependencyKindIndependent
+        return "independent"
+    elseif c == fmi2DependencyKindDependent
         return "dependent"
     elseif c == fmi2DependencyKindConstant
         return "constant"
@@ -596,7 +598,9 @@ function fmi2DependencyKindToString(c::fmi2DependencyKind)
 end
 
 function fmi2StringToDependencyKind(s::AbstractString)
-    if s == "dependent"
+    if s == "independent"
+        return fmi2DependencyKindIndependent
+    elseif s == "dependent"
         return fmi2DependencyKindDependent
     elseif s == "exact"
         return fmi2DependencyKindConstant
@@ -610,4 +614,3 @@ function fmi2StringToDependencyKind(s::AbstractString)
         @assert false "fmi2StringToDependencyKind($(s)): Unknown dependency kind."
     end
 end
-

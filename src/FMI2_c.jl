@@ -363,11 +363,12 @@ end
 
 # Custom helper, not part of the FMI-Spec. 
 const fmi2DependencyKind            = Cuint
-const fmi2DependencyKindDependent   = Cuint(0)
-const fmi2DependencyKindConstant    = Cuint(1)
-const fmi2DependencyKindFixed       = Cuint(2)
-const fmi2DependencyKindTunable     = Cuint(3)
-const fmi2DependencyKindDiscrete    = Cuint(4)
+const fmi2DependencyKindIndependent = Cuint(0)
+const fmi2DependencyKindDependent   = Cuint(1)
+const fmi2DependencyKindConstant    = Cuint(2)
+const fmi2DependencyKindFixed       = Cuint(3)
+const fmi2DependencyKindTunable     = Cuint(4)
+const fmi2DependencyKindDiscrete    = Cuint(5)
 
 # Custom helper, not part of the FMI-Spec. 
 const fmi2VariableNamingConvention              = Cuint
