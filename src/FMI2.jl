@@ -415,7 +415,7 @@ mutable struct FMU2 <: FMU
     callbackLibHandle::Ptr{Nothing}
 
     # START: experimental section (to FMIFlux.jl)
-    dependencies::Matrix{Union{fmi2DependencyKind, Nothing}}
+    dependencies::AbstractMatrix{fmi2DependencyKind}
 
     # END: experimental section
 
