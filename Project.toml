@@ -3,5 +3,8 @@ uuid = "8af89139-c281-408e-bce2-3005eb87462f"
 authors = ["TT <tobias.thummerer@informatik.uni-augsburg.de>", "LM <lars.mikelsons@informatik.uni-augsburg.de>", "JK <josef.kircher@student.uni-augsburg.de>"]
 version = "0.8.4"
 
+[deps]
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+
 [compat]
 julia = "^1.5"
