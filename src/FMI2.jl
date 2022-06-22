@@ -9,6 +9,9 @@
 # - the `FMU2`-struct
 # - string/enum-converters for FMI-attribute-structs (e.g. `fmi2StatusToString`, ...)
 
+using LightGraphs: AbstractGraph
+
+
 # this is a custom type to catch the internal mode of the component 
 @enum fmi2ComponentState begin
     fmi2ComponentStateInstantiated       # after instantiation
@@ -416,6 +419,8 @@ mutable struct FMU2 <: FMU
 
     # START: experimental section (to FMIFlux.jl)
     dependencies::AbstractMatrix{fmi2DependencyKind}
+    graph::AbstractGraph
+    colors::AbstractVector
 
     # END: experimental section
 
