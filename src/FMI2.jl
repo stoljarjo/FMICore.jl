@@ -421,6 +421,8 @@ mutable struct FMU2 <: FMU
     dependencies::AbstractMatrix{fmi2DependencyKind}
     graph::AbstractGraph
     colors::AbstractVector
+    stateValueIndicies::Dict{UInt, UInt}
+    derivativeValueIndicies::Dict{UInt, UInt}
 
     # END: experimental section
 
