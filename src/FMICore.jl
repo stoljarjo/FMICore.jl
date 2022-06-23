@@ -62,6 +62,7 @@ export fmi2VariableDependency
 export fmi2DefaultExperiment, fmi2Unknown, fmi2ModelStructure
 export fmi2ModelDescription 
 export fmi2ComponentState, fmi2ComponentStateInstantiated, fmi2ComponentStateInitializationMode, fmi2ComponentStateEventMode, fmi2ComponentStateContinuousTimeMode, fmi2ComponentStateTerminated, fmi2ComponentStateError, fmi2ComponentStateFatal
+export fmi2Coloring, fmi2ColoringRows, fmi2ColoringColumns, fmi2ColoringAll
 
 # functions 
 export fmi2CallbackLogger, fmi2CallbackAllocateMemory, fmi2CallbackFreeMemory, fmi2CallbackStepFinished

@@ -23,6 +23,13 @@ using LightGraphs: AbstractGraph
     fmi2ComponentStateFatal
 end
 
+# this is a custom type to catch the internal mode of the component 
+@enum fmi2Coloring begin
+    fmi2ColoringRows
+    fmi2ColoringColumns
+    fmi2ColoringAll
+end
+
 """
 ToDo.
 """
@@ -296,7 +303,7 @@ Overload the Base.show() function for custom printing of the FMU2.
 function Base.show(io::IO, sol::FMU2Solution) 
     print(io, "Model name:\n\t$(sol.fmu.modelDescription.modelName)\nSuccess:\n\t$(sol.success)\n")
 
-    if sol.states != nothing
+    if sol.states !== nothing
         print(io, "States [$(length(sol.states))]:\n")
         if length(sol.states.u) > 10
             for i in 1:9
@@ -310,7 +317,7 @@ function Base.show(io::IO, sol::FMU2Solution)
         end
     end
 
-    if sol.values != nothing
+    if sol.values !== nothing
         print(io, "Values [$(length(sol.values.saveval))]:\n")
         if length(sol.values.saveval) > 10
             for i in 1:9
@@ -324,7 +331,7 @@ function Base.show(io::IO, sol::FMU2Solution)
         end
     end
 
-    if sol.events != nothing
+    if sol.events !== nothing
         print(io, "Events [$(length(sol.events))]:\n")
         if length(sol.events) > 10
             for i in 1:9
@@ -420,6 +427,7 @@ mutable struct FMU2 <: FMU
     # START: experimental section (to FMIFlux.jl)
     dependencies::AbstractMatrix{fmi2DependencyKind}
     graph::AbstractGraph
+    colorType::fmi2Coloring
     colors::AbstractVector
     stateValueIndicies::Dict{UInt, UInt}
     derivativeValueIndicies::Dict{UInt, UInt}
