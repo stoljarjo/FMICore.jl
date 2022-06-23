@@ -429,9 +429,7 @@ mutable struct FMU2 <: FMU
     graph::AbstractGraph
     colorType::fmi2Coloring
     colors::AbstractVector
-    stateValueIndicies::Dict{UInt, UInt}
-    derivativeValueIndicies::Dict{UInt, UInt}
-
+ 
     # END: experimental section
 
     # DEPRECATED 
