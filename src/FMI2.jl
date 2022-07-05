@@ -615,7 +615,7 @@ function fmi2StringToDependencyKind(s::AbstractString)
         return fmi2DependencyKindIndependent
     elseif s == "dependent"
         return fmi2DependencyKindDependent
-    elseif s == "exact"
+    elseif s == "constant"
         return fmi2DependencyKindConstant
     elseif s == "fixed"
         return fmi2DependencyKindFixed
