@@ -23,13 +23,6 @@ using LightGraphs: AbstractGraph
     fmi2ComponentStateFatal
 end
 
-# this is a custom type to catch the internal mode of the component 
-@enum fmi2Coloring begin
-    fmi2ColoringRows
-    fmi2ColoringColumns
-    fmi2ColoringAll
-end
-
 """
 ToDo.
 """
@@ -427,7 +420,7 @@ mutable struct FMU2 <: FMU
     # START: experimental section (to FMIFlux.jl)
     dependencies::AbstractMatrix{fmi2DependencyKind}
     graph::AbstractGraph
-    colorType::fmi2Coloring
+    colorType::Symbol
     colors::AbstractVector
  
     # END: experimental section
