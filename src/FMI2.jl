@@ -9,7 +9,7 @@
 # - the `FMU2`-struct
 # - string/enum-converters for FMI-attribute-structs (e.g. `fmi2StatusToString`, ...)
 
-using LightGraphs: AbstractGraph
+using Graphs: AbstractGraph
 
 
 # this is a custom type to catch the internal mode of the component 
