@@ -1,7 +1,7 @@
 name = "FMICore"
 uuid = "8af89139-c281-408e-bce2-3005eb87462f"
 authors = ["TT <tobias.thummerer@informatik.uni-augsburg.de>", "LM <lars.mikelsons@informatik.uni-augsburg.de>", "JK <josef.kircher@student.uni-augsburg.de>"]
-version = "0.10.0"
+version = "0.11.0"
 
 [deps]
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
