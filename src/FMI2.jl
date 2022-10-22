@@ -10,6 +10,7 @@
 # - string/enum-converters for FMI-attribute-structs (e.g. `fmi2StatusToString`, ...)
 
 using Graphs: AbstractGraph
+using SparseArrays: AbstractSparseMatrixCSC
 
 
 # this is a custom type to catch the internal mode of the component 
@@ -81,8 +82,8 @@ mutable struct FMU2Component{F} # type is always FMU2, but this would cause a ci
     p_vrs::Array{fmi2ValueReference, 1}   # the system parameter value references
 
     # deprecated
-    jac_ẋy_x::Matrix{fmi2Real}
-    jac_ẋy_u::Matrix{fmi2Real}
+    jac_ẋy_x::Union{Matrix{fmi2Real}, AbstractSparseMatrixCSC{fmi2Real, Int64}}
+    jac_ẋy_u::Union{Matrix{fmi2Real}, AbstractSparseMatrixCSC{fmi2Real, Int64}}
     jac_x::Array{fmi2Real}
     jac_u::Union{Array{fmi2Real}, Nothing}
     jac_t::fmi2Real
