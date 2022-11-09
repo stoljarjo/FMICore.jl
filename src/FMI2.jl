@@ -442,6 +442,7 @@ mutable struct FMU2 <: FMU
     # START: experimental section (to FMIFlux.jl)
     dependencies::AbstractMatrix{Union{fmi2DependencyKind, Nothing}}
     graph::AbstractGraph
+    updateType::Symbol
     colorType::Symbol
     colors::AbstractVector
  
