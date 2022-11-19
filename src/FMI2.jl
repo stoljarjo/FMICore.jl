@@ -84,10 +84,10 @@ mutable struct FMU2Component{F}
     p_vrs::Array{fmi2ValueReference, 1}   # the system parameter value references
 
     # sensitivities
-    A::Union{Matrix{fmi2Real}, Nothing}
-    B::Union{Matrix{fmi2Real}, Nothing}
-    C::Union{Matrix{fmi2Real}, Nothing}
-    D::Union{Matrix{fmi2Real}, Nothing}
+    A::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
+    B::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
+    C::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
+    D::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
 
     # deprecated
     senseFunc::Symbol
