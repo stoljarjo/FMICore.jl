@@ -52,4 +52,4 @@ jobs:
           git clone https://github.com/JuliaCI/PkgEval.jl.git
           cd PkgEval.jl
           julia --project -e 'import Pkg; Pkg.instantiate()'
-          julia --project bin/test_package.jl --name FMICore --julia=${{ matrix.julia-version }}
+          julia --project bin/test_package.jl --name=FMICore --julia=${{ matrix.julia-version }}
