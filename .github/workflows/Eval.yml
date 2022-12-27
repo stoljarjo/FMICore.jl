@@ -52,6 +52,6 @@ jobs:
         run: |
           git clone https://github.com/JuliaCI/PkgEval.jl.git
           cd PkgEval.jl
-          echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"
+          echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"  >> $GITHUB_ENV
           julia --project -e 'import Pkg; Pkg.instantiate()'
-          julia --project bin/test_package.jl --name=FMICore --julia="${{ JULIA_VERSION }}"
+          julia --project bin/test_package.jl --name=FMICore --julia="${{ env.JULIA_VERSION }}"
