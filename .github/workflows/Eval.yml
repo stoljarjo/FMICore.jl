@@ -50,7 +50,11 @@ jobs:
       # Save the julia version as environment variable 
       - name: "Get Julia version"
         run: |
-            echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"  >> $GITHUB_ENV
+            if [[ ${{ matrix.julia-version }} != "nightly" ]]; then
+              echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"  >> $GITHUB_ENV
+            else
+              echo "JULIA_VERSION=nightly"  >> $GITHUB_ENV
+            fi
 
       # Run PkgEval
       - name: "Run PkgEval"
