@@ -47,11 +47,15 @@ jobs:
       - name: "Build package"
         uses: julia-actions/julia-buildpkg@v1
 
+      # Save the julia version as environment variable 
+      - name: "Get Julia version"
+        run: |
+            echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"  >> $GITHUB_ENV
+
       # Run PkgEval
       - name: "Run PkgEval"
         run: |
           git clone https://github.com/JuliaCI/PkgEval.jl.git
           cd PkgEval.jl
-          echo "JULIA_VERSION=$(julia -e 'println(VERSION)')"  >> $GITHUB_ENV
           julia --project -e 'import Pkg; Pkg.instantiate()'
           julia --project bin/test_package.jl --name=FMICore --julia="${{ env.JULIA_VERSION }}"
