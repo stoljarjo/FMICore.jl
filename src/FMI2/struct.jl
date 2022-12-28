@@ -12,16 +12,141 @@
 using Graphs: AbstractGraph
 using SparseArrays: AbstractSparseMatrixCSC
 
+"""
+Container for event related information.
+"""
+struct FMU2Event <: FMUEvent
+    t::Creal                                        # event time point
+    indicator::UInt                                 # index of event indicator ("0" for time events)
+    
+    x_left::Union{Array{Creal, 1}, Nothing}       # state before the event
+    x_right::Union{Array{Creal, 1}, Nothing}      # state after the event (if discontinuous)
 
-# this is a custom type to catch the internal mode of the component 
-@enum fmi2ComponentState begin
-    fmi2ComponentStateInstantiated       # after instantiation
-    fmi2ComponentStateInitializationMode # after finishing initialization
-    fmi2ComponentStateEventMode
-    fmi2ComponentStateContinuousTimeMode
-    fmi2ComponentStateTerminated 
-    fmi2ComponentStateError 
-    fmi2ComponentStateFatal
+    indicatorValue::Union{Creal, Nothing}         # value of the event indicator that triggered the event (should be really close to zero)
+
+    function FMU2Event(t::Creal, 
+                       indicator::UInt = 0, 
+                       x_left::Union{Array{Creal, 1}, Nothing} = nothing, 
+                       x_right::Union{Array{Creal, 1}, Nothing} = nothing, 
+                       indicatorValue::Union{Creal, Nothing} = nothing)
+        inst = new(t, indicator, x_left, x_right, indicatorValue)
+        return inst 
+    end
+end
+export FMU2Event
+
+""" 
+Overload the Base.show() function for custom printing of the FMU2.
+"""
+Base.show(io::IO, e::FMU2Event) = print(io, e.indicator == 0 ? "Time-Event @ $(round(e.t; digits=4))s" : "State-Event #$(e.indicator) @ $(round(e.t; digits=4))s")
+
+""" 
+ToDo 
+"""
+mutable struct FMU2Solution{C} <: FMUSolution where {C}
+    component::C # FMU2Component
+    success::Bool
+
+    states                                          # ToDo: ODESolution 
+
+    values                                          # ToDo: DataType
+    valueReferences::Union{Array, Nothing}          # ToDo: Array{fmi2ValueReference}
+
+    events::Array{FMU2Event, 1}
+
+    evals_∂ẋ_∂x::Integer
+    evals_∂ẋ_∂u::Integer
+    evals_∂y_∂x::Integer
+    evals_∂y_∂u::Integer
+    evals_∂ẋ_∂t::Integer
+    evals_∂y_∂t::Integer
+    
+    function FMU2Solution{C}() where {C}
+        inst = new{C}()
+
+        inst.success = false
+        inst.states = nothing 
+        inst.values = nothing
+        inst.valueReferences = nothing
+
+        inst.events = []
+
+        inst.evals_∂ẋ_∂x = 0
+        inst.evals_∂ẋ_∂u = 0
+        inst.evals_∂y_∂x = 0
+        inst.evals_∂y_∂u = 0
+        inst.evals_∂ẋ_∂t = 0
+        inst.evals_∂y_∂t = 0
+        
+        return inst
+    end
+    
+    function FMU2Solution(component::C) where {C}
+        inst = FMU2Solution{C}()
+        inst.component = component
+        
+        return inst
+    end
+end
+export FMU2Solution
+
+""" 
+Overload the Base.show() function for custom printing of the FMU2.
+"""
+function Base.show(io::IO, sol::FMU2Solution) 
+    print(io, "Model name:\n\t$(sol.component.fmu.modelDescription.modelName)\nSuccess:\n\t$(sol.success)\n")
+
+    print(io, "Jacobian-Evaluations:\n")
+    print(io, "\t∂ẋ_∂x: $(sol.evals_∂ẋ_∂x)\n")
+    print(io, "\t∂ẋ_∂u: $(sol.evals_∂ẋ_∂u)\n")
+    print(io, "\t∂y_∂x: $(sol.evals_∂y_∂x)\n")
+    print(io, "\t∂y_∂u: $(sol.evals_∂y_∂u)\n")
+    print(io, "Gradient-Evaluations:\n")
+    print(io, "\t∂ẋ_∂t: $(sol.evals_∂ẋ_∂t)\n")
+    print(io, "\t∂y_∂t: $(sol.evals_∂y_∂t)\n")
+    
+    if sol.states != nothing
+        print(io, "States [$(length(sol.states))]:\n")
+        if length(sol.states.u) > 10
+            for i in 1:9
+                print(io, "\t$(sol.states.t[i])\t$(sol.states.u[i])\n")
+            end
+            print(io, "\t...\n\t$(sol.states.t[end])\t$(sol.states.u[end])\n")
+        else
+            for i in 1:length(sol.states)
+                print(io, "\t$(sol.states.t[i])\t$(sol.states.u[i])\n")
+            end
+        end
+    end
+
+    if sol.values != nothing
+        print(io, "Values [$(length(sol.values.saveval))]:\n")
+        if length(sol.values.saveval) > 10
+            for i in 1:9
+                print(io, "\t$(sol.values.t[i])\t$(sol.values.saveval[i])\n")
+            end
+            print(io, "\t...\n\t$(sol.values.t[end])\t$(sol.values.saveval[end])\n")
+        else
+            for i in 1:length(sol.values.saveval)
+                print(io, "\t$(sol.values.t[i])\t$(sol.values.saveval[i])\n")
+            end
+        end
+    end
+
+    if sol.events != nothing
+        print(io, "Events [$(length(sol.events))]:\n")
+        if length(sol.events) > 10
+            for i in 1:9
+                print(io, "\t$(sol.events[i])\n")
+            end
+            print(io, "\t...\n\t$(sol.events[end])\n")
+        else
+            for i in 1:length(sol.events)
+                print(io, "\t$(sol.events[i])\n")
+            end
+        end
+    end
+
 end
 
 """
@@ -46,6 +171,7 @@ mutable struct FMU2ComponentEnvironment
         return inst
     end
 end
+export FMU2ComponentEnvironment
 
 """
 The mutable struct represents an allocated instance of an FMU in the FMI 2.0.2 Standard.
@@ -57,6 +183,7 @@ mutable struct FMU2Component{F}
     componentEnvironment::FMU2ComponentEnvironment
     problem # ODEProblem, but this is no dependency of FMICore.jl
     type::Union{fmi2Type, Nothing}
+    solution::FMU2Solution
 
     loggingOn::Bool
     callbackFunctions::fmi2CallbackFunctions
@@ -84,10 +211,10 @@ mutable struct FMU2Component{F}
     p_vrs::Array{fmi2ValueReference, 1}   # the system parameter value references
 
     # sensitivities
-    A::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
-    B::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
-    C::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
-    D::Union{Matrix{fmi2Real}, Nothing, AbstractSparseMatrixCSC{fmi2Real, Int64}}
+    A::Union{FMUJacobian, Nothing}
+    B::Union{FMUJacobian, Nothing}
+    C::Union{FMUJacobian, Nothing}
+    D::Union{FMUJacobian, Nothing}
 
     # deprecated
     senseFunc::Symbol
@@ -154,6 +281,7 @@ mutable struct FMU2Component{F}
         return inst
     end
 end
+export FMU2Component
 
 """ 
 Overload the Base.show() function for custom printing of the FMU2Component.
@@ -180,7 +308,9 @@ mutable struct FMU2ExecutionConfiguration <: FMUExecutionConfiguration
     freeInstance::Bool  # call fmi2FreeInstance after every training step / simulation
 
     loggingOn::Bool 
-    externalCallbacks::Bool    
+    externalCallbacks::Bool
+    
+    force::Bool     # default value for forced actions
     
     handleStateEvents::Bool                 # handle state events during simulation/training
     handleTimeEvents::Bool                  # handle time events during simulation/training
@@ -200,6 +330,9 @@ mutable struct FMU2ExecutionConfiguration <: FMUExecutionConfiguration
     maxNewDiscreteStateCalls::UInt          # max calls for fmi2NewDiscreteStates before throwing an exception
     maxStateEventsPerSecond::UInt           # max state events allowed to occur per second (more is interpreted as event jittering)
 
+    eval_t_gradients::Bool                  # if time gradients ∂ẋ_∂t and ∂y_∂t should be sampled (not part of the FMI standard)
+    JVPBuiltInDerivatives::Bool             # use built-in directional derivatives for JVP-sensitivities over FMU without caching the jacobian (because this is done in the FMU, but not per default)
+
     function FMU2ExecutionConfiguration()
         inst = new()
 
@@ -208,6 +341,8 @@ mutable struct FMU2ExecutionConfiguration <: FMUExecutionConfiguration
         inst.setup = true
         inst.instantiate = false 
         inst.freeInstance = false
+
+        inst.force = false
 
         inst.loggingOn = false
         inst.externalCallbacks = true
@@ -222,7 +357,7 @@ mutable struct FMU2ExecutionConfiguration <: FMUExecutionConfiguration
         inst.autoTimeShift = true
 
         inst.sensealg = nothing # auto
-        inst.useComponentShadow = false
+        
         inst.rootSearchInterpolationPoints = 10
         inst.inPlace = true
         inst.useVectorCallbacks = true
@@ -230,136 +365,52 @@ mutable struct FMU2ExecutionConfiguration <: FMUExecutionConfiguration
         inst.maxNewDiscreteStateCalls = 100
         inst.maxStateEventsPerSecond = 100
 
+        inst.eval_t_gradients = false
+        inst.JVPBuiltInDerivatives = false
+
+        # deprecated 
+        inst.useComponentShadow = false
+
         return inst 
     end
 end
+export FMU2ExecutionConfiguration
 
 # default for a "healthy" FMU - this is the fastetst 
 FMU2_EXECUTION_CONFIGURATION_RESET = FMU2ExecutionConfiguration()
 FMU2_EXECUTION_CONFIGURATION_RESET.terminate = true
 FMU2_EXECUTION_CONFIGURATION_RESET.reset = true
+FMU2_EXECUTION_CONFIGURATION_RESET.setup = true
 FMU2_EXECUTION_CONFIGURATION_RESET.instantiate = false
 FMU2_EXECUTION_CONFIGURATION_RESET.freeInstance = false
+export FMU2_EXECUTION_CONFIGURATION_RESET
 
 # if your FMU has a problem with "fmi2Reset" - this is default
 FMU2_EXECUTION_CONFIGURATION_NO_RESET = FMU2ExecutionConfiguration() 
 FMU2_EXECUTION_CONFIGURATION_NO_RESET.terminate = false
 FMU2_EXECUTION_CONFIGURATION_NO_RESET.reset = false
+FMU2_EXECUTION_CONFIGURATION_NO_RESET.setup = true
 FMU2_EXECUTION_CONFIGURATION_NO_RESET.instantiate = true
 FMU2_EXECUTION_CONFIGURATION_NO_RESET.freeInstance = true
+export FMU2_EXECUTION_CONFIGURATION_NO_RESET
 
 # if your FMU has a problem with "fmi2Reset" and "fmi2FreeInstance" - this is for weak FMUs (but slower)
 FMU2_EXECUTION_CONFIGURATION_NO_FREEING = FMU2ExecutionConfiguration() 
 FMU2_EXECUTION_CONFIGURATION_NO_FREEING.terminate = false
 FMU2_EXECUTION_CONFIGURATION_NO_FREEING.reset = false
+FMU2_EXECUTION_CONFIGURATION_NO_FREEING.setup = true
 FMU2_EXECUTION_CONFIGURATION_NO_FREEING.instantiate = true
 FMU2_EXECUTION_CONFIGURATION_NO_FREEING.freeInstance = false
+export FMU2_EXECUTION_CONFIGURATION_NO_FREEING
 
-"""
-Container for event related information.
-"""
-struct FMU2Event <: FMUEvent
-    t::Creal                                        # event time point
-    indicator::UInt                                 # index of event indicator ("0" for time events)
-    
-    x_left::Union{Array{Creal, 1}, Nothing}       # state before the event
-    x_right::Union{Array{Creal, 1}, Nothing}      # state after the event (if discontinuous)
-
-    indicatorValue::Union{Creal, Nothing}         # value of the event indicator that triggered the event (should be really close to zero)
-
-    function FMU2Event(t::Creal, 
-                       indicator::UInt = 0, 
-                       x_left::Union{Array{Creal, 1}, Nothing} = nothing, 
-                       x_right::Union{Array{Creal, 1}, Nothing} = nothing, 
-                       indicatorValue::Union{Creal, Nothing} = nothing)
-        inst = new(t, indicator, x_left, x_right, indicatorValue)
-        return inst 
-    end
-end
-
-""" 
-Overload the Base.show() function for custom printing of the FMU2.
-"""
-Base.show(io::IO, e::FMU2Event) = print(io, e.indicator == 0 ? "Time-Event @ $(round(e.t; digits=4))s" : "State-Event #$(e.indicator) @ $(round(e.t; digits=4))s")
-
-""" 
-ToDo 
-"""
-mutable struct FMU2Solution{F} <: FMUSolution where {F}
-    fmu::F # FMU2
-    success::Bool
-
-    states                                          # ToDo: ODESolution 
-
-    values                                          # ToDo: DataType
-    valueReferences::Union{Array, Nothing}          # ToDo: Array{fmi2ValueReference}
-
-    events::Array{FMU2Event, 1}
-    
-    function FMU2Solution(fmu::F) where {F}
-        inst = new{F}()
-
-        inst.fmu = fmu
-        inst.success = false
-        inst.states = nothing 
-        inst.values = nothing
-        inst.valueReferences = nothing
-
-        inst.events = []
-        
-        return inst
-    end
-end
-
-""" 
-Overload the Base.show() function for custom printing of the FMU2.
-"""
-function Base.show(io::IO, sol::FMU2Solution) 
-    print(io, "Model name:\n\t$(sol.fmu.modelDescription.modelName)\nSuccess:\n\t$(sol.success)\n")
-
-    if sol.states !== nothing
-        print(io, "States [$(length(sol.states))]:\n")
-        if length(sol.states.u) > 10
-            for i in 1:9
-                print(io, "\t$(sol.states.t[i])\t$(sol.states.u[i])\n")
-            end
-            print(io, "\t...\n\t$(sol.states.t[end])\t$(sol.states.u[end])\n")
-        else
-            for i in 1:length(sol.states)
-                print(io, "\t$(sol.states.t[i])\t$(sol.states.u[i])\n")
-            end
-        end
-    end
-
-    if sol.values !== nothing
-        print(io, "Values [$(length(sol.values.saveval))]:\n")
-        if length(sol.values.saveval) > 10
-            for i in 1:9
-                print(io, "\t$(sol.values.t[i])\t$(sol.values.saveval[i])\n")
-            end
-            print(io, "\t...\n\t$(sol.values.t[end])\t$(sol.values.saveval[end])\n")
-        else
-            for i in 1:length(sol.values.saveval)
-                print(io, "\t$(sol.values.t[i])\t$(sol.values.saveval[i])\n")
-            end
-        end
-    end
-
-    if sol.events !== nothing
-        print(io, "Events [$(length(sol.events))]:\n")
-        if length(sol.events) > 10
-            for i in 1:9
-                print(io, "\t$(sol.events[i])\n")
-            end
-            print(io, "\t...\n\t$(sol.events[end])\n")
-        else
-            for i in 1:length(sol.events)
-                print(io, "\t$(sol.events[i])\n")
-            end
-        end
-    end
-
-end
+# do nothing, this is useful e.g. for set/get state applications
+FMU2_EXECUTION_CONFIGURATION_NOTHING = FMU2ExecutionConfiguration() 
+FMU2_EXECUTION_CONFIGURATION_NOTHING.terminate = false
+FMU2_EXECUTION_CONFIGURATION_NOTHING.reset = false
+FMU2_EXECUTION_CONFIGURATION_NOTHING.setup = false
+FMU2_EXECUTION_CONFIGURATION_NOTHING.instantiate = false
+FMU2_EXECUTION_CONFIGURATION_NOTHING.freeInstance = false
+export FMU2_EXECUTION_CONFIGURATION_NOTHING
 
 """
 The mutable struct representing a FMU (and a container for all its instances) in the FMI 2.0.2 Standard.
@@ -464,6 +515,7 @@ mutable struct FMU2 <: FMU
         return inst 
     end
 end
+export FMU2
 
 """ 
 Overload the Base.show() function for custom printing of the FMU2.
@@ -472,176 +524,3 @@ Base.show(io::IO, fmu::FMU2) = print(io,
 "Model name:        $(fmu.modelDescription.modelName)
 Type:              $(fmu.type)"
 )
-
-"""
-Formats a fmi2Status/Integer to String.
-"""
-function fmi2StatusToString(status::Union{fmi2Status, Integer})
-    if status == fmi2StatusOK
-        return "OK"
-    elseif status == fmi2StatusWarning
-        return "Warning"
-    elseif status == fmi2StatusDiscard
-        return "Discard"
-    elseif status == fmi2StatusError
-        return "Error"
-    elseif status == fmi2StatusFatal
-        return "Fatal"
-    elseif status == fmi2StatusPending
-        return "Pending"
-    else
-        @assert false "fmi2StatusToString($(status)): Unknown FMU status."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2CausalityToString(c::fmi2Causality)
-    if c == fmi2CausalityParameter
-        return "parameter"
-    elseif c == fmi2CausalityCalculatedParameter
-        return "calculatedParameter"
-    elseif c == fmi2CausalityInput
-        return "input"
-    elseif c == fmi2CausalityOutput
-        return "output"
-    elseif c == fmi2CausalityLocal
-        return "local"
-    elseif c == fmi2CausalityIndependent
-        return "independent"
-    else 
-        @assert false "fmi2CausalityToString($(c)): Unknown causality."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2StringToCausality(s::AbstractString)
-    if s == "parameter"
-        return fmi2CausalityParameter
-    elseif s == "calculatedParameter"
-        return fmi2CausalityCalculatedParameter
-    elseif s == "input"
-        return fmi2CausalityInput
-    elseif s == "output"
-        return fmi2CausalityOutput
-    elseif s == "local"
-        return fmi2CausalityLocal
-    elseif s == "independent"
-        return fmi2CausalityIndependent
-    else 
-        @assert false "fmi2StringToCausality($(s)): Unknown causality."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2VariabilityToString(c::fmi2Variability)
-    if c == fmi2VariabilityConstant
-        return "constant"
-    elseif c == fmi2VariabilityFixed
-        return "fixed"
-    elseif c == fmi2VariabilityTunable
-        return "tunable"
-    elseif c == fmi2VariabilityDiscrete
-        return "discrete"
-    elseif c == fmi2VariabilityContinuous
-        return "continuous"
-    else 
-        @assert false "fmi2VariabilityToString($(c)): Unknown variability."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2StringToVariability(s::AbstractString)
-    if s == "constant"
-        return fmi2VariabilityConstant
-    elseif s == "fixed"
-        return fmi2VariabilityFixed
-    elseif s == "tunable"
-        return fmi2VariabilityTunable
-    elseif s == "discrete"
-        return fmi2VariabilityDiscrete
-    elseif s == "continuous"
-        return fmi2VariabilityContinuous
-    else 
-        @assert false "fmi2StringToVariability($(s)): Unknown variability."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2InitialToString(c::fmi2Initial)
-    if c == fmi2InitialApprox
-        return "approx"
-    elseif c == fmi2InitialExact
-        return "exact"
-    elseif c == fmi2InitialCalculated
-        return "calculated"
-    else 
-        @assert false "fmi2InitialToString($(c)): Unknown initial."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2StringToInitial(s::AbstractString)
-    if s == "approx"
-        return fmi2InitialApprox
-    elseif s == "exact"
-        return fmi2InitialExact
-    elseif s == "calculated"
-        return fmi2InitialCalculated
-    else 
-        @assert false "fmi2StringToInitial($(s)): Unknown initial."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2DependencyKindToString(c::fmi2DependencyKind)
-    if c == fmi2DependencyKindIndependent
-        return "independent"
-    elseif c == fmi2DependencyKindDependent
-        return "dependent"
-    elseif c == fmi2DependencyKindConstant
-        return "constant"
-    elseif c == fmi2DependencyKindFixed
-        return "fixed"
-    elseif c == fmi2DependencyKindTunable
-        return "tunable"
-    elseif c == fmi2DependencyKindDiscrete
-        return "discrete"
-    else 
-        @assert false "fmi2DependencyKindToString($(c)): Unknown dependency kind."
-    end
-end
-
-"""
-ToDo.
-"""
-function fmi2StringToDependencyKind(s::AbstractString)
-    if s == "independent"
-        return fmi2DependencyKindIndependent
-    elseif s == "dependent"
-        return fmi2DependencyKindDependent
-    elseif s == "constant"
-        return fmi2DependencyKindConstant
-    elseif s == "fixed"
-        return fmi2DependencyKindFixed
-    elseif s == "tunable"
-        return fmi2DependencyKindTunable
-    elseif s == "discrete"
-        return fmi2DependencyKindDiscrete
-    else 
-        @assert false "fmi2StringToDependencyKind($(s)): Unknown dependency kind."
-    end
-end
