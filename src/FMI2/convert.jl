@@ -145,7 +145,9 @@ export fmi2StringToInitial
 ToDo.
 """
 function fmi2DependencyKindToString(c::fmi2DependencyKind)
-    if c == fmi2DependencyKindDependent
+    if c == fmi2DependencyKindIndependent
+        return "independent"
+    elseif c == fmi2DependencyKindDependent
         return "dependent"
     elseif c == fmi2DependencyKindConstant
         return "constant"
@@ -165,7 +167,9 @@ export fmi2DependencyKindToString
 ToDo.
 """
 function fmi2StringToDependencyKind(s::AbstractString)
-    if s == "dependent"
+    if s == "independent"
+        return fmi2DependencyKindIndependent
+    elseif s == "dependent"
         return fmi2DependencyKindDependent
     elseif s == "constant"
         return fmi2DependencyKindConstant

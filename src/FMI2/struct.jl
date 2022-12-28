@@ -494,6 +494,7 @@ mutable struct FMU2 <: FMU
     dependencies::AbstractMatrix{Union{fmi2DependencyKind, Nothing}}
     graph::AbstractGraph
     updateType::Symbol
+    lastUpdateType::Symbol
     colorType::Symbol
     colors::AbstractVector
  

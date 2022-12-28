@@ -487,6 +487,8 @@ mutable struct fmi2ModelDescription
 
     # additional fields (non-FMI-specific)
     valueReferenceIndicies::Dict{UInt, UInt}
+    stateReferenceIndicies::Dict{UInt, UInt}
+    derivativeReferenceIndicies::Dict{UInt, UInt}
 
     # Constructor for uninitialized struct
     function fmi2ModelDescription()

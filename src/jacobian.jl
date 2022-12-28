@@ -2,9 +2,11 @@
 # Copyright (c) 2021 Tobias Thummerer, Lars Mikelsons, Josef Kircher
 # Licensed under the MIT license. See LICENSE file in the project root for details.
 #
+using SparseArrays: AbstractSparseMatrixCSC
+
 
 mutable struct FMUJacobian{R, V} 
-    mtx::Matrix{R}
+    mtx::Union{Matrix{R}, AbstractSparseMatrixCSC{R, Int64}}
     valid::Bool 
 
     ∂f_refs::AbstractArray{<:V}

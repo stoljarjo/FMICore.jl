@@ -153,12 +153,13 @@ export fmi2StatusKind, fmi2StatusKindDoStepStatus, fmi2StatusKindPendingStatus, 
 ToDo.
 """
 const fmi2DependencyKind            = Cuint
-const fmi2DependencyKindDependent   = Cuint(0)
-const fmi2DependencyKindConstant    = Cuint(1)
-const fmi2DependencyKindFixed       = Cuint(2)
-const fmi2DependencyKindTunable     = Cuint(3)
-const fmi2DependencyKindDiscrete    = Cuint(4)
-export fmi2DependencyKind, fmi2DependencyKindDependent, fmi2DependencyKindConstant, fmi2DependencyKindFixed, fmi2DependencyKindTunable, fmi2DependencyKindDiscrete
+const fmi2DependencyKindIndependent = Cuint(0)
+const fmi2DependencyKindDependent   = Cuint(1)
+const fmi2DependencyKindConstant    = Cuint(2)
+const fmi2DependencyKindFixed       = Cuint(3)
+const fmi2DependencyKindTunable     = Cuint(4)
+const fmi2DependencyKindDiscrete    = Cuint(5)
+export fmi2DependencyKind, fmi2DependencyKindIndependent, fmi2DependencyKindDependent, fmi2DependencyKindConstant, fmi2DependencyKindFixed, fmi2DependencyKindTunable, fmi2DependencyKindDiscrete
 
 # Custom helper, not part of the FMI-Spec. 
 const fmi2VariableNamingConvention              = Cuint
